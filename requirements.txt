@@ -1,0 +1,6 @@
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+requests==2.32.3
+pycryptodome==3.20.0
+PySocks==1.7.1
+websockets==12.0

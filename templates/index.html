@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ColorSort - Saque Automático</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: #00d4ff;
+            margin-bottom: 10px;
+            font-size: 2em;
+            text-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 30px;
+            font-size: 0.9em;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .card h2 {
+            color: #00d4ff;
+            margin-bottom: 20px;
+            font-size: 1.2em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #aaa;
+            font-size: 0.85em;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 0.95em;
+            font-family: 'Courier New', monospace;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #00d4ff;
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
+        }
+
+        .form-group input::placeholder {
+            color: #555;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        @media (max-width: 600px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #00d4ff, #0099cc);
+            color: #000;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #33ddff, #00aadd);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 212, 255, 0.4);
+        }
+
+        .btn-primary:disabled {
+            background: #333;
+            color: #666;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ff4444, #cc0000);
+            color: #fff;
+            margin-top: 10px;
+        }
+
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #ff6666, #dd2222);
+        }
+
+        .log-container {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 15px;
+            max-height: 500px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            line-height: 1.6;
+        }
+
+        .log-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .log-container::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .log-container::-webkit-scrollbar-thumb {
+            background: #00d4ff;
+            border-radius: 3px;
+        }
+
+        .log-line {
+            padding: 2px 0;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .log-line.step {
+            color: #00d4ff;
+            font-weight: bold;
+        }
+
+        .log-line.success {
+            color: #00ff88;
+            font-weight: bold;
+        }
+
+        .log-line.error {
+            color: #ff4444;
+            font-weight: bold;
+        }
+
+        .log-line.done {
+            color: #ffaa00;
+            font-weight: bold;
+        }
+
+        .status-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #666;
+        }
+
+        .status-dot.connected {
+            background: #00ff88;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.running {
+            background: #ffaa00;
+            box-shadow: 0 0 10px rgba(255, 170, 0, 0.5);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .status-text {
+            font-size: 0.85em;
+            color: #aaa;
+        }
+
+        .info-box {
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 8px;
+            padding: 12px 15px;
+            margin-bottom: 20px;
+            font-size: 0.85em;
+            color: #88ccff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ColorSort Saque</h1>
+        <p class="subtitle">Farm + Saque Automático</p>
+
+        <div class="card">
+            <h2>Credenciais</h2>
+
+            <div class="info-box">
+                Preencha os dados da conta. O script vai farmar saldo e realizar os saques automaticamente.
+            </div>
+
+            <div class="form-group">
+                <label>Token</label>
+                <input type="text" id="token" placeholder="Ex: UX8CcQQ8VzMDdQI6WzABPQU3Bj9RYwo8WmoFLA">
+            </div>
+
+            <div class="form-group">
+                <label>Device ID</label>
+                <input type="text" id="device_id" placeholder="Ex: CFF751FA2BFB81D3">
+            </div>
+
+            <div class="form-group">
+                <label>Chave PIX</label>
+                <input type="text" id="pix_key" placeholder="Ex: 71ae661c-3e00-498a-9197-3fc3c8ae951a">
+            </div>
+
+            <div class="form-group">
+                <label>CPF (para cadastro do PIX)</label>
+                <input type="text" id="cpf" placeholder="Ex: 46123509870" value="46123509870">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Proxy (SOCKS5)</label>
+                    <input type="text" id="proxy_url" placeholder="socks5://user:pass@host:port" value="socks5://6936263ac9ab2b264946__cr.br:43eeef3eab2c871e@gw.dataimpulse.com:824">
+                </div>
+
+                <div class="form-group">
+                    <label>Meta de Farm</label>
+                    <input type="number" id="farm_target" value="160" min="25" max="500">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Número de Saques</label>
+                    <select id="num_saques">
+                        <option value="1">1 saque (R$ 25)</option>
+                        <option value="2" selected>2 saques (R$ 50)</option>
+                    </select>
+                </div>
+            </div>
+
+            <button class="btn btn-primary" id="btn-start" onclick="startProcess()">
+                Iniciar Farm + Saque
+            </button>
+            <button class="btn btn-danger" id="btn-stop" onclick="stopProcess()" style="display:none;">
+                Parar Execução
+            </button>
+        </div>
+
+        <div class="card" id="log-card" style="display:none;">
+            <h2>Log de Execução</h2>
+
+            <div class="status-bar">
+                <div class="status-dot" id="status-dot"></div>
+                <span class="status-text" id="status-text">Aguardando...</span>
+            </div>
+
+            <div class="log-container" id="log-container"></div>
+        </div>
+    </div>
+
+    <script>
+        let ws = null;
+
+        function startProcess() {
+            const token = document.getElementById('token').value.trim();
+            const device_id = document.getElementById('device_id').value.trim();
+            const pix_key = document.getElementById('pix_key').value.trim();
+            const cpf = document.getElementById('cpf').value.trim();
+            const proxy_url = document.getElementById('proxy_url').value.trim();
+            const farm_target = document.getElementById('farm_target').value;
+            const num_saques = document.getElementById('num_saques').value;
+
+            if (!token || !device_id || !pix_key) {
+                alert('Preencha Token, Device ID e Chave PIX!');
+                return;
+            }
+
+            // Mostrar log
+            document.getElementById('log-card').style.display = 'block';
+            document.getElementById('log-container').innerHTML = '';
+            document.getElementById('btn-start').disabled = true;
+            document.getElementById('btn-stop').style.display = 'block';
+
+            // Status
+            const dot = document.getElementById('status-dot');
+            const text = document.getElementById('status-text');
+            dot.className = 'status-dot running';
+            text.textContent = 'Executando...';
+
+            // WebSocket
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
+
+            ws.onopen = () => {
+                ws.send(JSON.stringify({
+                    token,
+                    device_id,
+                    pix_key,
+                    cpf,
+                    proxy_url,
+                    farm_target: parseInt(farm_target),
+                    num_saques: parseInt(num_saques),
+                }));
+            };
+
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                addLog(data.msg, data.type);
+
+                if (data.type === 'done') {
+                    dot.className = 'status-dot connected';
+                    text.textContent = 'Finalizado!';
+                    document.getElementById('btn-start').disabled = false;
+                    document.getElementById('btn-stop').style.display = 'none';
+                }
+            };
+
+            ws.onclose = () => {
+                dot.className = 'status-dot';
+                text.textContent = 'Desconectado';
+                document.getElementById('btn-start').disabled = false;
+                document.getElementById('btn-stop').style.display = 'none';
+            };
+
+            ws.onerror = () => {
+                addLog('❌ Erro de conexão WebSocket', 'error');
+                dot.className = 'status-dot';
+                text.textContent = 'Erro';
+                document.getElementById('btn-start').disabled = false;
+                document.getElementById('btn-stop').style.display = 'none';
+            };
+        }
+
+        function stopProcess() {
+            if (ws) {
+                ws.close();
+                ws = null;
+            }
+            document.getElementById('btn-start').disabled = false;
+            document.getElementById('btn-stop').style.display = 'none';
+            document.getElementById('status-dot').className = 'status-dot';
+            document.getElementById('status-text').textContent = 'Parado';
+            addLog('\n⛔ Execução interrompida pelo usuário', 'error');
+        }
+
+        function addLog(msg, type = 'log') {
+            const container = document.getElementById('log-container');
+            const line = document.createElement('div');
+            line.className = `log-line ${type}`;
+            line.textContent = msg;
+            container.appendChild(line);
+            container.scrollTop = container.scrollHeight;
+        }
+    </script>
+</body>
+</html>
