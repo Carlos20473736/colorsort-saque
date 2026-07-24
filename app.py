@@ -16,12 +16,17 @@ from typing import Any
 import requests
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad
+import os
+from pathlib import Path
+
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import HTMLResponse
 
 app = FastAPI()
-app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# Ler o HTML do template na inicialização
+BASE_DIR = Path(__file__).resolve().parent
+INDEX_HTML = (BASE_DIR / "templates" / "index.html").read_text(encoding="utf-8")
 
 # Constantes da API
 BASE_URL = "https://api.colorsortgame.com"
@@ -191,7 +196,7 @@ async def farm_cycle(level: int, token: str, device_id: str, proxy_url: str) -> 
 
 @app.get("/")
 async def index():
-    return FileResponse("templates/index.html")
+    return HTMLResponse(content=INDEX_HTML)
 
 
 @app.websocket("/ws")
@@ -383,7 +388,6 @@ async def websocket_endpoint(websocket: WebSocket):
 
 
 if __name__ == "__main__":
-    import os
     import uvicorn
     port = int(os.environ.get("PORT", "8000"))
     print(f"Starting server on port {port}")
