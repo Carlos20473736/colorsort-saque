@@ -296,8 +296,9 @@
                 <div class="form-group">
                     <label>Número de Saques</label>
                     <select id="num_saques">
-                        <option value="1">1 saque (R$ 25)</option>
-                        <option value="2" selected>2 saques (R$ 50)</option>
+                        <option value="1">1 saque de R$ 25</option>
+                        <option value="2" selected>2 saques de R$ 25 (R$ 50 total)</option>
+                        <option value="1_50">1 saque de R$ 50</option>
                     </select>
                 </div>
             </div>
@@ -332,7 +333,19 @@
             const cpf = document.getElementById('cpf').value.trim();
             const proxy_url = document.getElementById('proxy_url').value.trim();
             const farm_target = document.getElementById('farm_target').value;
-            const num_saques = document.getElementById('num_saques').value;
+            const num_saques_raw = document.getElementById('num_saques').value;
+            let num_saques = 2;
+            let saque_mode = '25';
+            if (num_saques_raw === '1') {
+                num_saques = 1;
+                saque_mode = '25';
+            } else if (num_saques_raw === '2') {
+                num_saques = 2;
+                saque_mode = '25';
+            } else if (num_saques_raw === '1_50') {
+                num_saques = 1;
+                saque_mode = '50';
+            }
 
             if (!token || !device_id || !pix_key) {
                 alert('Preencha Token, Device ID e Chave PIX!');
@@ -363,7 +376,8 @@
                     cpf,
                     proxy_url,
                     farm_target: parseInt(farm_target),
-                    num_saques: parseInt(num_saques),
+                    num_saques: num_saques,
+                    saque_mode: saque_mode,
                 }));
             };
 

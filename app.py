@@ -213,7 +213,16 @@ async def websocket_endpoint(websocket: WebSocket):
         proxy_url = config.get("proxy_url", "").strip()
         farm_target = int(config.get("farm_target", 160))
         num_saques = int(config.get("num_saques", 2))
+        saque_mode = config.get("saque_mode", "25").strip()
         cpf = config.get("cpf", "46123509870").strip()
+
+        # Determinar level_id e valor por saque
+        if saque_mode == "50":
+            saque_level_id = "2"
+            saque_valor = 50
+        else:
+            saque_level_id = "1"
+            saque_valor = 25
 
         if not token or not device_id or not pix_key:
             await websocket.send_json({"type": "error", "msg": "Token, Device ID e PIX são obrigatórios!"})
@@ -225,7 +234,7 @@ async def websocket_endpoint(websocket: WebSocket):
         await log("═══════════════════════════════════════════════════════════")
         await log(f"   DeviceId: {device_id}")
         await log(f"   PIX: {pix_key}")
-        await log(f"   Meta: Farm {farm_target} → {num_saques} saques de 25")
+        await log(f"   Meta: Farm {farm_target} → {num_saques} saque(s) de R$ {saque_valor}")
         await log("═══════════════════════════════════════════════════════════\n")
 
         # [1] Verificar saldo
@@ -322,16 +331,16 @@ async def websocket_endpoint(websocket: WebSocket):
             await log(f"   Novo saldo: R$ {new_cash}")
 
         # [4] Saques
-        await log(f"\n💸 [4] Realizando {num_saques} saques de R$ 25...", "step")
+        await log(f"\n💸 [4] Realizando {num_saques} saque(s) de R$ {saque_valor}...", "step")
 
         saques_ok = 0
         total_sacado = 0
         for i in range(num_saques):
-            await log(f"\n   ── Saque {i+1}/{num_saques} (valor: 25, level_id: 1) ──")
+            await log(f"\n   ── Saque {i+1}/{num_saques} (valor: {saque_valor}, level_id: {saque_level_id}) ──")
 
             do_cash = await api_req(
                 "/v1/withdraw/do_cash",
-                {"account_id": account_id, "level_id": "1"},
+                {"account_id": account_id, "level_id": saque_level_id},
                 token=token, device_id=device_id, proxy_url=proxy_url,
             )
 
@@ -357,9 +366,9 @@ async def websocket_endpoint(websocket: WebSocket):
 
                 if do_charge.get("code") == 1:
                     saques_ok += 1
-                    total_sacado += 25
+                    total_sacado += saque_valor
                     await log(f"\n   ✅✅✅ SAQUE {i+1} REALIZADO COM SUCESSO! ✅✅✅", "success")
-                    await log(f"   Valor: R$ 25")
+                    await log(f"   Valor: R$ {saque_valor}")
                     await log(f"   PIX: {pix_key}")
                 else:
                     error_code = (do_charge.get("data") or {}).get("_errCode_")
